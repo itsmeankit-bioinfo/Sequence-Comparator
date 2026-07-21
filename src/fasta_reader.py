@@ -1,68 +1,102 @@
+"""
+Functions for reading FASTA files.
+"""
+
 from pathlib import Path
 
+from .exceptions import FastaFormatError
+from .models import SequenceRecord
+from .validator import validate_sequence
 
-class FASTAReader:
-    """Reads DNA/RNA sequences from FASTA files."""
 
-    @staticmethod
-    def read(file_path):
-        """
-        Reads sequences from a FASTA file.
+def read_fasta(path: str, molecule_type: str = "DNA") -> list[SequenceRecord]:
+    """
+    Read a FASTA or Multi-FASTA file.
 
-        Returns:
-            list of dictionaries:
-            [
-                {
-                    "id": "...",
-                    "sequence": "ATGC..."
-                }
-            ]
-        """
+    Args:
+        path: Path to the FASTA file.
+        molecule_type: Either "DNA" or "RNA".
 
-        file_path = Path(file_path)
+    Returns:
+        A list of SequenceRecord objects.
 
-        if not file_path.exists():
-            raise FileNotFoundError(f"File not found: {file_path}")
+    Raises:
+        FileNotFoundError:
+            If the file does not exist.
+        FastaFormatError:
+            If the FASTA file is malformed.
+    """
 
-        sequences = []
+    file_path = Path(path)
 
-        current_id = None
-        current_sequence = []
+    if not file_path.exists():
+        raise FileNotFoundError(f"File not found: {path}")
 
-        with open(file_path, "r") as fasta:
+    records: list[SequenceRecord] = []
 
-            for line in fasta:
+    identifier = None
+    description = ""
+    sequence_lines = []
 
-                line = line.strip()
+    with file_path.open("r", encoding="utf-8") as fasta:
 
-                if not line:
-                    continue
+        for line in fasta:
+            line = line.strip()
 
-                if line.startswith(">"):
+            if not line:
+                continue
 
-                    if current_id is not None:
+            if line.startswith(">"):
 
-                        sequences.append(
-                            {
-                                "id": current_id,
-                                "sequence": "".join(current_sequence).upper(),
-                            }
+                if identifier is not None:
+                    sequence = "".join(sequence_lines).upper()
+
+                    validate_sequence(sequence, molecule_type)
+
+                    records.append(
+                        SequenceRecord(
+                            identifier=identifier,
+                            description=description,
+                            sequence=sequence,
                         )
+                    )
 
-                    current_id = line[1:]
-                    current_sequence = []
+                header = line[1:].strip()
 
-                else:
+                if not header:
+                    raise FastaFormatError("Empty FASTA header found.")
 
-                    current_sequence.append(line)
+                parts = header.split(maxsplit=1)
 
-        if current_id is not None:
+                identifier = parts[0]
+                description = parts[1] if len(parts) > 1 else ""
 
-            sequences.append(
-                {
-                    "id": current_id,
-                    "sequence": "".join(current_sequence).upper(),
-                }
+                sequence_lines = []
+
+            else:
+
+                if identifier is None:
+                    raise FastaFormatError(
+                        "Sequence found before FASTA header."
+                    )
+
+                sequence_lines.append(line)
+
+    if identifier is not None:
+
+        sequence = "".join(sequence_lines).upper()
+
+        validate_sequence(sequence, molecule_type)
+
+        records.append(
+            SequenceRecord(
+                identifier=identifier,
+                description=description,
+                sequence=sequence,
             )
+        )
 
-        return sequences
+    if not records:
+        raise FastaFormatError("No FASTA records found.")
+
+    return records
