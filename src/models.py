@@ -43,3 +43,26 @@ class SequenceRecord:
     def is_rna(self) -> bool:
         """Return True if the sequence is RNA."""
         return "U" in self.sequence
+
+
+@dataclass(slots=True)
+class Mismatch:
+    """
+    Represents a mismatch between two sequences.
+    """
+
+    position: int
+    reference: str
+    observed: str
+
+
+@dataclass(slots=True)
+class ComparisonResult:
+    """
+    Stores the result of comparing two sequences.
+    """
+
+    matches: int
+    mismatches: int
+    identity: float
+    mismatches_list: list[Mismatch]

@@ -1,5 +1,5 @@
+from src.comparator import compare_sequences
 from src.fasta_reader import read_fasta
-from src.statistics import sequence_summary
 
 
 def main():
@@ -7,20 +7,30 @@ def main():
     print("🧬 Sequence Comparator v0.1.0")
     print("=" * 60)
 
-    records = read_fasta("data/sample1.fasta")
+    reference = read_fasta("data/sample1.fasta")[0]
+    query = read_fasta("data/sample2.fasta")[0]
 
-    for record in records:
-        summary = sequence_summary(record)
+    result = compare_sequences(reference, query)
 
-        print(f"\nIdentifier : {summary['Identifier']}")
-        print(f"Length     : {summary['Length']} bp")
-        print(f"Type       : {summary['Type']}")
-        print(f"GC Content : {summary['GC (%)']}%")
-        print(f"AT Content : {summary['AT (%)']}%")
-        print("Base Counts")
+    print(f"\nReference : {reference.identifier}")
+    print(f"Query     : {query.identifier}")
 
-        for base, count in summary["Base Counts"].items():
-            print(f"  {base}: {count}")
+    print(f"\nLength    : {reference.length}")
+    print(f"Matches   : {result.matches}")
+    print(f"Mismatches: {result.mismatches}")
+    print(f"Identity  : {result.identity}%")
+
+    if result.mismatches_list:
+        print("\nMismatch Positions")
+        print("-" * 40)
+
+        for mismatch in result.mismatches_list:
+            print(
+                f"Position {mismatch.position}: "
+                f"{mismatch.reference} → {mismatch.observed}"
+            )
+    else:
+        print("\nNo mismatches found.")
 
 
 if __name__ == "__main__":
