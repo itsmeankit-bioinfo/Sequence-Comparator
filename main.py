@@ -1,6 +1,14 @@
 from src.comparator import compare_sequences
 from src.fasta_reader import read_fasta
+from src.mutation import mutation_summary
 
+for mismatch in result.mismatches_list:
+
+    print("\nMutation Summary")
+print("-" * 40)
+
+for mutation in mutation_summary(result):
+    print(mutation)
 
 def main():
     print("=" * 60)
