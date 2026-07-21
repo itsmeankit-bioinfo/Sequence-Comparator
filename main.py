@@ -1,18 +1,26 @@
-from src.fasta_reader import FASTAReader
+from src.fasta_reader import read_fasta
+from src.statistics import sequence_summary
 
 
 def main():
+    print("=" * 60)
+    print("🧬 Sequence Comparator v0.1.0")
+    print("=" * 60)
 
-    sequences = FASTAReader.read("data/sample1.fasta")
+    records = read_fasta("data/sample1.fasta")
 
-    print("=" * 50)
-    print("Sequence Comparator")
-    print("=" * 50)
+    for record in records:
+        summary = sequence_summary(record)
 
-    for sequence in sequences:
-        print(f"ID       : {sequence['id']}")
-        print(f"Length   : {len(sequence['sequence'])}")
-        print(f"Sequence : {sequence['sequence']}")
+        print(f"\nIdentifier : {summary['Identifier']}")
+        print(f"Length     : {summary['Length']} bp")
+        print(f"Type       : {summary['Type']}")
+        print(f"GC Content : {summary['GC (%)']}%")
+        print(f"AT Content : {summary['AT (%)']}%")
+        print("Base Counts")
+
+        for base, count in summary["Base Counts"].items():
+            print(f"  {base}: {count}")
 
 
 if __name__ == "__main__":
