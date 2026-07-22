@@ -1,14 +1,8 @@
 from src.comparator import compare_sequences
 from src.fasta_reader import read_fasta
 from src.mutation import mutation_summary
+from src.report import generate_text_report
 
-for mismatch in result.mismatches_list:
-
-    print("\nMutation Summary")
-print("-" * 40)
-
-for mutation in mutation_summary(result):
-    print(mutation)
 
 def main():
     print("=" * 60)
@@ -28,17 +22,23 @@ def main():
     print(f"Mismatches: {result.mismatches}")
     print(f"Identity  : {result.identity}%")
 
-    if result.mismatches_list:
-        print("\nMismatch Positions")
-        print("-" * 40)
+    print("\nMutation Summary")
+    print("-" * 40)
 
-        for mismatch in result.mismatches_list:
-            print(
-                f"Position {mismatch.position}: "
-                f"{mismatch.reference} → {mismatch.observed}"
-            )
+    if result.mismatches_list:
+        for mutation in mutation_summary(result):
+            print(mutation)
     else:
-        print("\nNo mismatches found.")
+        print("No mutations found.")
+
+    generate_text_report(
+        reference,
+        query,
+        result,
+        "output/comparison_report.txt",
+    )
+
+    print("\n✅ Report saved to output/comparison_report.txt")
 
 
 if __name__ == "__main__":
